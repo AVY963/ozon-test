@@ -1,0 +1,162 @@
+# Пользователь
+type User {
+  id: String!
+  username: String!
+  email: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+# Пост
+type Post {
+  id: String!
+  authorId: String!
+  title: String!
+  content: String!
+  commentsDisabled: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  
+  # Связанные данные
+  author: User
+  comments(limit: Int = 20, offset: Int = 0): CommentConnection
+}
+
+# Комментарий
+type Comment {
+  id: String!
+  postId: String!
+  authorId: String!
+  parentId: String
+  content: String!
+  path: String!
+  level: Int!
+  createdAt: String!
+  updatedAt: String!
+  
+  # Связанные данные
+  author: User
+  post: Post
+  parent: Comment
+  replies(limit: Int = 20, offset: Int = 0): CommentConnection
+}
+
+# Пагинация для постов
+type PostConnection {
+  posts: [Post!]!
+  pagination: PaginationInfo!
+}
+
+# Пагинация для комментариев
+type CommentConnection {
+  comments: [Comment!]!
+  pagination: PaginationInfo!
+}
+
+# Информация о пагинации
+type PaginationInfo {
+  total: Int!
+  limit: Int!
+  offset: Int!
+  hasMore: Boolean!
+}
+
+# События для подписок
+type CommentEvent {
+  type: String!
+  postId: String!
+  comment: Comment!
+}
+
+# Входные данные для создания пользователя
+input CreateUserInput {
+  username: String!
+  email: String!
+}
+
+# Входные данные для обновления пользователя
+input UpdateUserInput {
+  id: String!
+  username: String!
+  email: String!
+}
+
+# Входные данные для создания поста
+input CreatePostInput {
+  authorId: String!
+  title: String!
+  content: String!
+}
+
+# Входные данные для обновления поста
+input UpdatePostInput {
+  id: String!
+  authorId: String!
+  title: String!
+  content: String!
+}
+
+# Входные данные для создания комментария
+input CreateCommentInput {
+  postId: String!
+  authorId: String!
+  content: String!
+  parentId: String
+}
+
+# Входные данные для обновления комментария
+input UpdateCommentInput {
+  id: String!
+  authorId: String!
+  content: String!
+}
+
+# Входные данные для переключения комментариев
+input ToggleCommentsInput {
+  postId: String!
+  authorId: String!
+  disable: Boolean!
+}
+
+# Запросы
+type Query {
+  # Пользователи
+  user(id: String!): User
+  userByUsername(username: String!): User
+  
+  # Посты
+  post(id: String!): Post
+  posts(limit: Int = 20, offset: Int = 0): PostConnection!
+  postsByAuthor(authorId: String!, limit: Int = 20, offset: Int = 0): PostConnection!
+  
+  # Комментарии
+  comment(id: String!): Comment
+  postComments(postId: String!, limit: Int = 20, offset: Int = 0): CommentConnection!
+  commentReplies(parentId: String!, limit: Int = 20, offset: Int = 0): CommentConnection!
+  commentThread(commentId: String!, maxDepth: Int = 10): [Comment!]!
+}
+
+# Мутации
+type Mutation {
+  # Пользователи
+  createUser(input: CreateUserInput!): User!
+  updateUser(input: UpdateUserInput!): User!
+  deleteUser(userId: String!): Boolean!
+  
+  # Посты
+  createPost(input: CreatePostInput!): Post!
+  updatePost(input: UpdatePostInput!): Post!
+  deletePost(postId: String!, authorId: String!): Boolean!
+  toggleComments(input: ToggleCommentsInput!): Boolean!
+  
+  # Комментарии
+  createComment(input: CreateCommentInput!): Comment!
+  updateComment(input: UpdateCommentInput!): Comment!
+  deleteComment(commentId: String!, authorId: String!): Boolean!
+}
+
+# Подписки
+type Subscription {
+  # Подписка на новые комментарии к посту
+  commentAdded(postId: String!): CommentEvent!
+} 
